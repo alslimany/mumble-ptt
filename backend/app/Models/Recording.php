@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Recording extends Model
 {
@@ -17,6 +18,8 @@ class Recording extends Model
         'ended_at' => 'datetime',
     ];
 
+    protected $appends = ['url'];
+
     public function organization()
     {
         return $this->belongsTo(Organization::class);
@@ -25,5 +28,13 @@ class Recording extends Model
     public function room()
     {
         return $this->belongsTo(Room::class);
+    }
+
+    /**
+     * Get the public URL for the recording file.
+     */
+    public function getUrlAttribute(): string
+    {
+        return Storage::url($this->file_path);
     }
 }
