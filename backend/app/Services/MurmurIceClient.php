@@ -23,7 +23,7 @@ class MurmurIceClient implements MumbleIceClient
         $server = $this->metaProxy()->newServer();
         $serverId = (int) $this->callFirst($server, ['id', 'getId']);
         $port = (int) $this->callFirst($server, ['getConf'], ['port']);
-        $password = bin2hex(random_bytes(8));
+        $password = bin2hex(random_bytes(16));
 
         $this->callFirst($server, ['setConf'], ['registername', 'org-'.$organizationId]);
         $this->callFirst($server, ['setConf'], ['serverpassword', $password]);
@@ -91,9 +91,11 @@ class MurmurIceClient implements MumbleIceClient
 
         $this->communicator = \Ice\initialize($initData);
 
-        if ($this->secret !== '') {
-            $this->communicator->getImplicitContext()->put('secret', $this->secret);
+        if ($this->secret === '') {
+            throw new RuntimeException('MUMBLE_ICE_SECRET is required to authenticate with Murmur Ice.');
         }
+
+        $this->communicator->getImplicitContext()->put('secret', $this->secret);
 
         $proxy = $this->communicator->stringToProxy(sprintf('Meta:tcp -h %s -p %d -t 5000', $this->host, $this->port));
 

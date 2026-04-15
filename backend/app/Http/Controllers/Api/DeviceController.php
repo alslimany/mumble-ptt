@@ -25,7 +25,7 @@ class DeviceController extends Controller
 
         $organization = $device->organization;
         $settings = $organization?->settings ?? [];
-        $mumblePassword = substr(hash('sha256', $device->unique_identifier.'|'.config('app.key')), 0, 24);
+        $mumblePassword = hash_hmac('sha256', $device->unique_identifier, (string) config('app.key'));
         try {
             if (empty($settings['mumble_server_id'])) {
                 $server = $mumbleIceService->createVirtualServer($organization->id);
@@ -36,7 +36,7 @@ class DeviceController extends Controller
                 $organization->save();
             }
 
-            if (!$device->mumble_user_id && !empty($settings['mumble_server_id'])) {
+            if ($device->mumble_user_id === null && ! empty($settings['mumble_server_id'])) {
                 $device->mumble_user_id = $mumbleIceService->registerUser(
                     (int) $settings['mumble_server_id'],
                     $device->unique_identifier,
@@ -46,6 +46,11 @@ class DeviceController extends Controller
             }
         } catch (Throwable $exception) {
             report($exception);
+            logger()->warning('Mumble provisioning failed during device registration.', [
+                'device_id' => $device->id,
+                'organization_id' => $device->organization_id,
+                'error' => $exception->getMessage(),
+            ]);
         }
 
         $token = JWTAuth::fromUser($device);
