@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Device;
 use App\Services\MumbleIceService;
 use Illuminate\Http\Request;
+use Throwable;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class DeviceController extends Controller
@@ -24,25 +25,27 @@ class DeviceController extends Controller
 
         $organization = $device->organization;
         $settings = $organization?->settings ?? [];
-
-        if (empty($settings['mumble_server_id'])) {
-            $server = $mumbleIceService->createVirtualServer($organization->id);
-            $settings['mumble_server_id'] = $server['serverId'];
-            $settings['mumble_port'] = $server['port'];
-            $settings['mumble_server_password'] = $server['password'];
-            $organization->settings = $settings;
-            $organization->save();
-        }
-
         $mumblePassword = substr(hash('sha256', $device->unique_identifier.'|'.config('app.key')), 0, 24);
+        try {
+            if (empty($settings['mumble_server_id'])) {
+                $server = $mumbleIceService->createVirtualServer($organization->id);
+                $settings['mumble_server_id'] = $server['serverId'];
+                $settings['mumble_port'] = $server['port'];
+                $settings['mumble_server_password'] = $server['password'];
+                $organization->settings = $settings;
+                $organization->save();
+            }
 
-        if (!$device->mumble_user_id) {
-            $device->mumble_user_id = $mumbleIceService->registerUser(
-                (int) $settings['mumble_server_id'],
-                $device->unique_identifier,
-                $mumblePassword,
-            );
-            $device->save();
+            if (!$device->mumble_user_id && !empty($settings['mumble_server_id'])) {
+                $device->mumble_user_id = $mumbleIceService->registerUser(
+                    (int) $settings['mumble_server_id'],
+                    $device->unique_identifier,
+                    $mumblePassword,
+                );
+                $device->save();
+            }
+        } catch (Throwable $exception) {
+            report($exception);
         }
 
         $token = JWTAuth::fromUser($device);

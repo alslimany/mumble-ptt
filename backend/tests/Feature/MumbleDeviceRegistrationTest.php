@@ -25,7 +25,7 @@ class MumbleDeviceRegistrationTest extends TestCase
         parent::setUp();
 
         config([
-            'jwt.secret' => 'test-jwt-secret',
+            'jwt.secret' => str_repeat('x', 64),
             'app.key' => 'base64:'.base64_encode(str_repeat('a', 32)),
         ]);
     }
