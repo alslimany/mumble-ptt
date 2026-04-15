@@ -57,6 +57,7 @@ class DeviceController extends Controller
 
         return response()->json([
             'token' => $token,
+            'ws_token' => $token,
             'mumble_host' => config('app.mumble_host', '127.0.0.1'),
             'mumble_port' => $settings['mumble_port'] ?? config('app.mumble_port', 64738),
             'mumble_username' => $device->unique_identifier,
