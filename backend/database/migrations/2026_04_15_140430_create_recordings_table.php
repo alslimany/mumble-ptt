@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('recordings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('organization_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('room_id');
             $table->string('file_path');
             $table->integer('duration')->nullable();
             $table->timestamp('started_at')->nullable();

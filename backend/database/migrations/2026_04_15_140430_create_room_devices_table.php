@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('room_devices', function (Blueprint $table) {
             $table->foreignId('device_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('room_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('room_id');
             $table->boolean('can_switch')->default(false);
             $table->timestamps();
             $table->primary(['device_id', 'room_id']);
