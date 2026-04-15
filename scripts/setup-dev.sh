@@ -32,6 +32,15 @@ docker compose -f "$COMPOSE_FILE" up -d --build --remove-orphans
 echo "==> Waiting for PostgreSQL to be ready..."
 wait_for_postgres
 
+echo "==> Running composer install"
+docker exec ptt-laravel composer install
+
+echo "==> Running npm install"
+docker exec ptt-laravel npm install
+
+echo "==> Running npm run build"
+docker exec ptt-laravel npm run build
+
 echo "==> Running Laravel migrations and seeders"
 docker exec ptt-laravel php artisan migrate --seed --force
 
