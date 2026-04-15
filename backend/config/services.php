@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'mumble' => [
+        'ice_host' => env('MUMBLE_ICE_HOST', 'murmur'),
+        'ice_port' => (int) env('MUMBLE_ICE_PORT', 6502),
+        'ice_secret' => env('MUMBLE_ICE_SECRET', ''),
+    ],
+
 ];

@@ -11,7 +11,7 @@ class Device extends Model implements JWTSubject
     /** @use HasFactory<\Database\Factories\DeviceFactory> */
     use HasFactory;
 
-    protected $fillable = ['organization_id', 'unique_identifier', 'name', 'model', 'is_active'];
+    protected $fillable = ['organization_id', 'unique_identifier', 'name', 'model', 'is_active', 'mumble_user_id'];
 
     public function organization()
     {
