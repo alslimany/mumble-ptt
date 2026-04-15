@@ -1,0 +1,29 @@
+# Dockerfile for Laravel 12 (PHP 8.3 FPM)
+FROM php:8.3-fpm-alpine AS base
+
+# System dependencies
+RUN apk add --no-cache \
+    git curl zip unzip libzip-dev libpq-dev \
+    nodejs npm ffmpeg \
+    && docker-php-ext-install pdo pdo_pgsql zip opcache pcntl
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /var/www/html
+
+# Copy composer files first for layer caching
+COPY composer.json composer.lock ./
+RUN composer install --no-scripts --no-autoloader --no-dev
+
+# Copy application
+COPY . .
+RUN composer dump-autoload --optimize
+
+# Install Node dependencies and build assets
+RUN npm ci && npm run build && rm -rf node_modules
+
+RUN chown -R www-data:www-data storage bootstrap/cache
+
+EXPOSE 9000
+CMD ["php-fpm"]
