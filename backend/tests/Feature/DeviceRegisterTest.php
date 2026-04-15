@@ -21,7 +21,7 @@ class DeviceRegisterTest extends TestCase
         ]);
 
         $response->assertStatus(200)
-            ->assertJsonStructure(['token', 'mumble_host', 'mumble_port', 'mumble_username', 'mumble_password']);
+            ->assertJsonStructure(['token', 'ws_token', 'mumble_host', 'mumble_port', 'mumble_username', 'mumble_password']);
     }
 
     public function test_device_register_returns_404_for_unknown_device(): void
