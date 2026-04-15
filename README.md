@@ -1,1 +1,160 @@
-# mumble-ptt
+# PTT Walkie‑Talkie Solution (EVO‑like)
+
+A complete, production‑ready Push‑to‑Talk (PTT) solution for Android and Linux PoC devices, built on top of the open‑source **Mumble** voice server. The system provides organisation management, real‑time voice communication, GPS tracking, voice recording, and a web‑based admin dashboard.
+
+## 🚀 Features
+
+- **Low‑latency voice** – Mumble with Opus codec (< 200 ms typical)
+- **Multi‑tenant** – Each organisation gets its own virtual Mumble server
+- **Device management** – Register devices by IMEI (Android) or generated serial (Linux)
+- **Real‑time control** – Force room switching, remote PTT override via Laravel Reverb
+- **GPS tracking** – Background location reporting with configurable intervals
+- **Voice recording** – Automatic archiving and playback from admin dashboard
+- **Admin dashboard** – Built with Laravel + Inertia.js + React (map, device list, recording player)
+
+## 📐 Architecture Overview
+
+![Architecture Diagram](docs/architecture.png)
+
+- **Client Layer** – Android app (Kotlin + Jumble), Linux headless client (talKKonnect), Admin web UI
+- **Edge** – NGINX / Caddy (SSL termination, routing)
+- **Backend Services** – Laravel (API + Ice RPC), Laravel Reverb (WebSockets), Redis (queue/broadcast), PostgreSQL, Murmur (Mumble server)
+- **Storage** – Relational DB, S3‑compatible object storage for recordings
+
+For a detailed description, see [docs/architecture.md](docs/architecture.md).
+
+## 🛠️ Tech Stack
+
+| Component          | Technology                                      |
+|--------------------|-------------------------------------------------|
+| Voice server       | Murmur (Mumble) + Ice RPC                       |
+| Backend API        | Laravel 12, PHP 8.3+                            |
+| Real‑time          | Laravel Reverb + Redis                          |
+| Admin frontend     | Inertia.js + React                              |
+| Mobile client      | Kotlin, Jumble library, Foreground Services     |
+| Linux client       | talKKonnect / talkiepi                          |
+| Database           | PostgreSQL 15+ (or MySQL 8+)                    |
+| Containerisation   | Docker, Docker Compose                          |
+
+## 📦 Project Structure
+ptt-solution/
+├── backend/ # Laravel + Inertia + React
+│ ├── app/ # Models, Controllers, Services (MumbleIceService)
+│ ├── database/ # Migrations, Seeders, Factories
+│ ├── routes/ # API, Web, Broadcasting routes
+│ ├── tests/ # PHPUnit & Dusk tests
+│ └── ...
+├── android/ # Android Kotlin app
+│ ├── app/ # Main source set
+│ ├── src/androidTest/ # Instrumentation tests
+│ └── ...
+├── docker/ # Dockerfiles & docker-compose
+│ ├── docker-compose.yml
+│ ├── docker-compose.prod.yml
+│ └── nginx/
+├── docs/ # Architecture, setup guides, API docs
+└── scripts/ # Helper scripts (setup-dev.sh, test-e2e.sh)
+
+
+## 🔧 Getting Started (Development)
+
+### Prerequisites
+
+- Docker & Docker Compose
+- PHP 8.3+ (local for IDE, but Docker handles runtime)
+- Node.js 20+ & NPM
+- Android Studio (for mobile app)
+- Java 17 (for Android build)
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/your-org/ptt-solution.git
+cd ptt-solution
+```
+
+### 2. Run the development setup script
+```bash
+chmod +x scripts/setup-dev.sh
+./scripts/setup-dev.sh
+```
+
+This script will:
+
+Copy .env.example to .env
+
+Build and start all Docker containers
+
+Run Laravel migrations and seeders
+
+Install NPM dependencies and build the admin UI
+
+Generate a test organisation and device
+
+3. Access the services
+Admin dashboard – https://localhost (default credentials: admin@example.com / password)
+
+Mumble server – localhost:64738 (for testing with any Mumble client)
+
+API – http://localhost/api
+
+4. Run tests
+bash
+# Backend unit/feature tests
+docker exec ptt-laravel php artisan test
+
+# End‑to‑end integration tests
+./scripts/test-e2e.sh
+
+# Android tests (inside Android Studio or via gradlew)
+cd android && ./gradlew testDebugUnitTest
+📱 Building the Android App
+Open android/ in Android Studio.
+
+Set your backend API URL in app/src/main/res/values/config.xml.
+
+Build a signed APK or AAB:
+
+bash
+cd android
+./gradlew assembleRelease
+🐧 Preparing a Linux PoC Device
+Use a Raspberry Pi or similar with a 3G/4G modem.
+
+Install talkiepi from GitHub.
+
+On first boot, generate a unique serial number and store it in /etc/device-id.
+
+Configure talkiepi to use your backend registration endpoint.
+
+See docs/linux-client-setup.md for detailed instructions.
+
+☁️ Production Deployment
+We recommend Docker Swarm or Kubernetes. A GitHub Actions workflow is provided:
+
+bash
+# Build and push images
+docker build -t your-registry/ptt-backend:latest ./backend
+docker build -t your-registry/ptt-reverb:latest --target reverb ./backend
+docker push ...
+
+# Deploy using Docker Compose with production overrides
+docker stack deploy -c docker/docker-compose.prod.yml ptt
+Environment variables required in production:
+
+APP_URL, APP_ENV=production
+
+DB_* (use a managed PostgreSQL)
+
+REDIS_URL
+
+MUMBLE_ICE_HOST, MUMBLE_ICE_SECRET
+
+AWS_* (if using S3 for recordings)
+
+📄 License
+Proprietary – all rights reserved. For licensing inquiries, contact [your email].
+
+🤝 Contributing
+Internal use only. Please follow the copilot instructions when generating code.
+
